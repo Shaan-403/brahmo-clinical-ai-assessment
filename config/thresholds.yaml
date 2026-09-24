@@ -1,0 +1,34 @@
+# Central config — no thresholds, paths, or constants should be hardcoded in src/.
+
+data_sources:
+  cdci: { path: "data/cdci_drug_subset.csv", version_column: "source_version" }
+  nlem: { path: "data/nlem_extract.csv" }
+  jan_aushadhi: { path: "data/jan_aushadhi_extract.csv" }
+  regulatory_events: { path: "data/regulatory_gazette_events.csv" }
+  pharmacy_stock: { path: "data/pharmacy_stock.csv" }
+  severe_interactions: { path: "data/severe_interaction_seed.csv" }
+  seed_prescriptions: { path: "data/seed_prescriptions_template.csv" }
+  local_protocol: { path: "data/local_protocol_acute_fever.md" }
+  corpus_dir: "corpus/"
+
+normalization:
+  fuzzy_match_min_score: 90        # rapidfuzz score below which a match is queued, never auto-resolved
+  confidence_auto_accept_threshold: 0.95
+
+rail:
+  # every check must resolve to one of exactly these states
+  states:
+    - HIT
+    - CHECKED_NO_HIT
+    - PARTIAL_COVERAGE
+    - UNVERIFIED_INPUT
+    - NOT_CHECKED
+    - DATA_EXPIRED
+    - SOURCE_CONFLICT
+    - SERVICE_UNAVAILABLE
+
+retrieval:
+  chunking_unit: "decision_unit"   # never blind token slices
+  hybrid_weight_lexical: 0.5
+  hybrid_weight_semantic: 0.5
+  top_k: 8

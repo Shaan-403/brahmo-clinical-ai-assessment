@@ -1,0 +1,32 @@
+# --- core ---
+pandas>=2.2
+pydantic>=2.7
+PyYAML>=6.0
+
+# --- db / migrations ---
+SQLAlchemy>=2.0
+alembic>=1.13
+
+# --- Module A: fuzzy matching for messy brand/pharmacy strings ---
+rapidfuzz>=3.9
+
+# --- Module B: retrieval ---
+rank-bm25>=0.2.2
+sentence-transformers>=3.0
+
+# --- Module B: PDF chunking ---
+pdfplumber>=0.11
+
+# --- API / trace endpoint ---
+fastapi>=0.111
+uvicorn>=0.30
+
+# --- config / env ---
+python-dotenv>=1.0
+
+# --- testing ---
+pytest>=8.2
+pytest-cov>=5.0
+
+# --- dev tooling ---
+ruff>=0.5
