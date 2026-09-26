@@ -25,3 +25,4 @@ venv/
 eval_results/*.tmp
 db/*.sqlite3
 *.sqlite3-journal
+.gitignore.tmp
