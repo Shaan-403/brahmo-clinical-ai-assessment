@@ -13,6 +13,10 @@ VALID_REASON_CODES = {
     "NO_CANDIDATE_INGREDIENT_ALIAS",          # raw ingredient string has no exact match and no fuzzy candidate either
     "STRENGTH_TEXT_STRUCTURED_MISMATCH",      # CDCI's free-text strength_text disagrees with its own structured
                                                # ingredient_N/strength_N_mg columns (or strength_text didn't parse)
+    "REGULATORY_TARGET_INGREDIENT_UNMAPPED",  # a regulatory_events row's parsed target ingredient name(s) do not
+                                               # exactly match any canonical ingredient -- the event is still ingested,
+                                               # but cannot be matched by the Safety Rail's prohibited/restricted-FDC
+                                               # check until resolved (see DESIGN.md D-014)
 }
 
 

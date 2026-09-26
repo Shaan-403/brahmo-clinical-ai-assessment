@@ -44,7 +44,9 @@ def main() -> None:
           f"{interactions_result['unresolved']} with an unresolved ingredient{_tag(interactions_result)}")
 
     regulatory_result = load_regulatory_events(conn)
-    print(f"Regulatory events: {regulatory_result['events']} events{_tag(regulatory_result)}")
+    print(f"Regulatory events: {regulatory_result['events']} events, "
+          f"{regulatory_result['queued']} with an unmapped target ingredient (queued for review)"
+          f"{_tag(regulatory_result)}")
 
     stock_result = load_pharmacy_stock(conn)
     print(f"Pharmacy stock: {stock_result['rows']} rows, "

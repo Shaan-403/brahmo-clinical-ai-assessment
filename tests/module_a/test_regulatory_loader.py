@@ -75,3 +75,85 @@ def test_different_content_is_not_treated_as_already_loaded(conn, tmp_path):
     assert r1["skipped"] is False
     r2 = load_regulatory_events(conn, csv_path=v2)
     assert r2["skipped"] is False
+
+
+def test_unmapped_target_ingredients_are_queued_with_provenance(conn):
+    """G3 fix (DESIGN.md D-014): EV004/EV007 ("Caffeine") and EV011
+    ("Codeine-based cough FDCs") never resolve to a canonical ingredient.
+    Each must produce a review_queue entry with the new reason code,
+    carrying the event's own provenance -- not just be silently absent from
+    ingredient matching."""
+    from src.module_a.ingest.cdci_loader import load_cdci
+    load_cdci(conn)  # populates the canonical ingredient registry EV004/EV007/EV011 are checked against
+    result = load_regulatory_events(conn)
+    assert result["queued"] == 3  # EV004, EV007, EV011 -- verified against the real data pack
+
+    queued_rows = conn.execute(
+        "SELECT * FROM review_queue WHERE entity_type='regulatory_event' "
+        "AND reason_code='REGULATORY_TARGET_INGREDIENT_UNMAPPED' ORDER BY id"
+    ).fetchall()
+    assert len(queued_rows) == 3
+
+    candidates_by_event = {}
+    for row in queued_rows:
+        c = json.loads(row["candidates_json"])
+        candidates_by_event[c["event_id"]] = c
+
+    assert set(candidates_by_event) == {"EV004", "EV007", "EV011"}
+
+    ev004 = candidates_by_event["EV004"]
+    assert ev004["unmapped_ingredient_names"] == ["Caffeine"]
+    assert ev004["target_description"] == "Chlorpheniramine + Phenylephrine + Caffeine + Paracetamol (specific ratio)"
+    assert ev004["action"] == "PROHIBITED"
+    assert ev004["effective_date"] == "2016-03-10"
+    assert ev004["notification_id"] == "GSR 218(E)"
+    assert ev004["load_batch_id"] is not None
+
+    ev011 = candidates_by_event["EV011"]
+    assert ev011["unmapped_ingredient_names"] == ["Codeine-based cough FDCs"]
+
+    # every queued row must reference an actual regulatory_events row (real
+    # entity_id, not a placeholder) -- provenance must be traceable, not just quoted
+    for row in queued_rows:
+        event = conn.execute("SELECT * FROM regulatory_events WHERE id=?", (row["entity_id"],)).fetchone()
+        assert event is not None
+        assert event["event_id"] == json.loads(row["candidates_json"])["event_id"]
+
+
+def test_events_with_fully_mapped_targets_are_not_queued(conn):
+    from src.module_a.ingest.cdci_loader import load_cdci
+    load_cdci(conn)
+    load_regulatory_events(conn)
+    queued_event_ids = {
+        json.loads(r["candidates_json"])["event_id"]
+        for r in conn.execute(
+            "SELECT * FROM review_queue WHERE entity_type='regulatory_event' "
+            "AND reason_code='REGULATORY_TARGET_INGREDIENT_UNMAPPED'"
+        ).fetchall()
+    }
+    # EV001/EV002/EV003 (Nimesulide+Paracetamol) and EV005/EV006 (Ranitidine)
+    # all map cleanly against CDCI's ingredient vocabulary and must not be queued.
+    assert queued_event_ids.isdisjoint({"EV001", "EV002", "EV003", "EV005", "EV006"})
+
+
+def test_running_without_cdci_loaded_first_queues_everything(conn):
+    """If the canonical ingredient registry is empty (CDCI not loaded yet),
+    every FDC/INGREDIENT event's targets are -- correctly -- unmapped. This
+    isn't the normal run_all.py order (CDCI loads first), but the loader
+    must not crash or silently skip the check if run standalone."""
+    result = load_regulatory_events(conn)
+    assert result["queued"] == 11  # all 11 FDC/INGREDIENT-type events (EV010 is PRODUCT-type, has no target ingredients)
+
+
+def test_reload_of_skipped_batch_reports_the_same_queued_count(conn):
+    from src.module_a.ingest.cdci_loader import load_cdci
+    load_cdci(conn)
+    first = load_regulatory_events(conn)
+    second = load_regulatory_events(conn)
+    assert second["skipped"] is True
+    assert second["queued"] == first["queued"] == 3
+    # and it must not have queued a second, duplicate set of review items
+    total_queued = conn.execute(
+        "SELECT COUNT(*) c FROM review_queue WHERE entity_type='regulatory_event'"
+    ).fetchone()["c"]
+    assert total_queued == 3
