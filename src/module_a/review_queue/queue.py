@@ -11,6 +11,8 @@ VALID_REASON_CODES = {
     "NO_EXACT_BRAND_MATCH",                   # no exact normalized-brand match; only fuzzy candidates (or none)
     "AMBIGUOUS_INGREDIENT_ALIAS",             # raw ingredient string has fuzzy candidates but no exact match
     "NO_CANDIDATE_INGREDIENT_ALIAS",          # raw ingredient string has no exact match and no fuzzy candidate either
+    "STRENGTH_TEXT_STRUCTURED_MISMATCH",      # CDCI's free-text strength_text disagrees with its own structured
+                                               # ingredient_N/strength_N_mg columns (or strength_text didn't parse)
 }
 
 

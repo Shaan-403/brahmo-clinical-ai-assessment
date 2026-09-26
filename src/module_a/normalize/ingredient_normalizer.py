@@ -107,7 +107,7 @@ def resolve_reference_ingredient(conn: sqlite3.Connection, raw_name: str, source
                 r = choices[matched_key]
                 candidates.append({"ingredient_id": r["id"], "canonical_name": r["canonical_name"], "score": score})
 
-    alias_id = _record_alias(conn, raw_name, None, 0.0, "fuzzy_candidate_unconfirmed",
+    alias_id = _record_alias(conn, raw_name, None, None, "fuzzy_candidate_unconfirmed",
                               source, source_version, load_batch_id)
     reason_code = "AMBIGUOUS_INGREDIENT_ALIAS" if candidates else "NO_CANDIDATE_INGREDIENT_ALIAS"
     add_review_item(conn, entity_type=entity_type_for_queue, entity_id=alias_id,
