@@ -12,6 +12,7 @@ venv/
 # DB
 *.db
 *.sqlite3
+*.sqlite3-journal
 
 # OS
 .DS_Store
@@ -22,3 +23,5 @@ venv/
 
 # Eval / scratch outputs (keep curated results, not raw scratch)
 eval_results/*.tmp
+db/*.sqlite3
+*.sqlite3-journal

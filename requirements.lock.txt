@@ -1,4 +1,4 @@
-# Generated via 'pip freeze' against requirements.txt on 2026-09-24 — pin these for a fully reproducible install.
+# Generated via 'pip freeze' against requirements.txt
 alembic==1.20.0
 annotated-doc==0.0.5
 annotated-types==0.8.0

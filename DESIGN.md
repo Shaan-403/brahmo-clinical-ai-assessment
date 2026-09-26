@@ -1,18 +1,43 @@
 # DESIGN.md — Shantanu Sahu
 
 ## 0. The system in my own words (one paragraph)
-_Restate what BRAHMO clinical AI is and what this Part-1 build proves._
+
+BRAHMO is a doctor-facing clinical AI for Indian outpatient practice that is patient-aware, cites its sources, and never lets a language model touch a medication-safety decision. Part 1 proves the two load-bearing pieces underneath that promise: a versioned, event-sourced drug master that can decompose any Indian brand-name product (including fixed-dose combinations) down to its constituent salts without ever silently guessing an ambiguous mapping, and a deterministic rail that runs safety checks over that decomposition using pure lookup logic. This slice of the build (Module A ingestion/normalization) proves the first half: every row of the provided data pack is loaded with full source/version/batch provenance, all 160 FDC products are decomposed into individually-versioned ingredient rows, and every mapping that cannot be made with certainty — which turns out to be the majority of real-world pharmacy stock — lands in an auditable review queue with a reason code and evidence, never a guess.
 
 ## 0.1 The three riskiest assumptions I see in the provided materials
-1.
-2.
-3.
+
+1. **That "brand name" is a usable identity key at all.** 565 of 1,058 distinct brand names in the CDCI subset (75% of product rows) are shared by two or more completely unrelated formulations — different ingredients, different strengths, sometimes different manufacturers ("Becet 1" is both Sertraline 100mg and Cefixime 100mg). Any design that resolves a doctor's typed or scanned brand name to "the product" without also disambiguating by strength, manufacturer, or an explicit doctor confirmation is building on sand. I treat this as the single highest-risk assumption in the whole packet — worth confirming with BRAHMO whether the real, non-subset CDCI data has this same density of collisions, because if so it reshapes the entire prescription-intake UX (the doctor must always be shown and asked to confirm which formulation, not just which brand).
+2. **That a 2,000-row CDCI subset is representative enough to validate against real pharmacy stock.** 574 of 783 real pharmacy_stock.csv rows (73%) cannot be uniquely resolved against this subset — 554 because the brand name is ambiguous within the subset itself, 20 because there's no exact match at all. Some of that 20 is very plausibly coverage gaps (real brands that exist in the full national dataset but were cut when this 2,000-row subset was prepared for the assessment), not genuine real-world ambiguity. I can't tell the two apart from inside the subset, and neither should the system pretend to.
+3. **That fuzzy/AI-assisted matching is a productivity aid rather than a load-bearing decision.** It's tempting to raise the auto-accept threshold once you see a fuzzy match scoring 88.9% similarity ("CMOX" → "Camox"). I deliberately did not build any fuzzy auto-accept tier at all (see D-002) because in a drug-identity context a wrong 88.9%-confidence guess is not "close enough," it's a different drug. This is a bet that BRAHMO's tolerance for review-queue volume is higher than its tolerance for a single wrong auto-resolution — worth confirming, since the review queue this run produced is not small (577 items from Module A ingestion alone).
 
 ## Decisions
-_One block per significant decision. Keep adding._
 
-### D-001 — [title]
-- **Decision:**
-- **Why:**
-- **Rejected alternative(s) and why not:**
-- **Implication / what this constrains later:**
+### D-001 — brand_name is not a unique key in the products table
+- **Decision:** `products.external_product_id` (CDCI's own `CD1000`-style id) is the sole identity key. `brand_name` and its normalized form are indexed for search but carry no uniqueness constraint.
+- **Why:** The data itself falsifies brand-name uniqueness — 75% of product rows share a brand name with an unrelated formulation. A schema that assumed uniqueness would either reject valid CDCI rows or silently merge distinct drugs into one identity.
+- **Rejected alternative(s):** (a) `UNIQUE(brand_name)` with a "most recent wins" or "first wins" tiebreak on conflict — rejected outright, this is exactly the silent-guessing failure mode the brief calls out as an auto-fail. (b) `UNIQUE(brand_name, manufacturer)` — rejected because it still collides for 77 brand names in this subset; it narrows the problem without solving it.
+- **Implication:** Every downstream consumer of `products` (the future safety rail, Module B's structured-fact lookups, prescription intake) must query by `external_product_id`, never assume a brand-name lookup returns one row, and must handle the multi-row case explicitly.
+
+### D-002 — no fuzzy auto-accept tier; only exact-normalized-match may auto-resolve
+- **Decision:** Resolution confidence has exactly two useful tiers: `structured_source_field` (1.0, the source declares the mapping itself) and `exact_normalized_match` (0.9, a case/whitespace/hyphen-normalized exact string match against a single existing candidate). Anything that required approximate/fuzzy matching — `fuzzy_candidate_unconfirmed` — is always queued, regardless of similarity score.
+- **Why:** A single numeric confidence threshold (e.g. "auto-accept fuzzy matches ≥ 90") invites exactly the failure the brief warns about: a confident wrong answer. I found a real case in the data ("CMOX" → "Camox", rapidfuzz WRatio 88.9) where a plausible-looking threshold would auto-accept a match to one of two entirely different drugs (Ibuprofen or Nitrofurantoin) sharing that brand stem.
+- **Rejected alternative(s):** A single `fuzzy_match_min_score` threshold for auto-accept (my own first draft, before I ran the data and saw the collision above) — rejected once measured against the actual data, not a hypothetical.
+- **Implication:** The review queue volume from real-world input (pharmacy stock, in this case) will be large — 574/783 rows in this run. That's a UX and staffing problem for Part 2 (see gaps register), not a bug in Module A; I'd rather surface that cost honestly than hide it behind a threshold tuned to look clean on this one file.
+
+### D-003 — product_resolutions is a separate table from review_queue
+- **Decision:** Every resolution *attempt* (auto-resolved or queued) is logged to `product_resolutions` with its full candidate set. `review_queue` holds only the subset that needs a human, referencing back to the same entity.
+- **Why:** "100% provenance on data rows and check results" (gate G5) requires being able to answer "why was this auto-resolved?" for the 209 rows that were, not just "why is this queued?" for the 574 that weren't. Folding both into one table would force awkward nullable columns and blur the audit trail.
+- **Rejected alternative(s):** A single table with a `status` column and no distinction — rejected, it's cheaper to build but answers fewer audit questions later.
+- **Implication:** Any report on ingestion quality (e.g. "what fraction of pharmacy stock did we resolve confidently?") is one query against `product_resolutions`; any work queue for a human reviewer is one query against `review_queue`. They can evolve independently.
+
+### D-004 — ingredient_aliases is a first-class table, separate from product_ingredients
+- **Decision:** Ingredient-name normalization (matching salt-name spelling variants, e.g. NLEM's "Amoxicillin + Clavulanic Acid" against CDCI's split ingredient columns) has its own audit table, distinct from the product→ingredient decomposition table.
+- **Why:** These are different problems with different failure modes. FDC decomposition (product_ingredients) is "which salts and strengths make up this specific product." Ingredient normalization (ingredient_aliases) is "is this string the same molecule as that string." Conflating them would make it impossible to answer "how did we decide Paracetamol and paracetamol are the same ingredient" separately from "how did we decide Sinarest contains paracetamol."
+- **Rejected alternative(s):** Storing a raw ingredient string directly on `product_ingredients` with no separate alias table — rejected, it would mean re-deriving the alias decision from scratch every time instead of reusing an audited one.
+- **Implication:** New sources that mention ingredients by name (Module B's clinical text, eventually) can resolve against the same alias table and inherit the same "exact vs. queued" discipline.
+
+### D-005 — SQLite for Part 1, with numbered raw-SQL migrations rather than an ORM/Alembic layer
+- **Decision:** Schema ships as 10 numbered, hand-written `.sql` migration files (`db/migrations/0001_...` through `0010_...`), applied by a ~30-line runner that tracks applied filenames in a `schema_migrations` table.
+- **Why:** At this data volume (2,000 products, ~800 pharmacy rows) a full ORM/Alembic setup is overhead that makes the schema *harder* to review, not easier — a reviewer can read every migration file top to bottom in a few minutes. SQLite needs zero setup for the "<1 hour fresh-machine reproduction" gate.
+- **Rejected alternative(s):** SQLAlchemy models + Alembic autogeneration — rejected for this phase as premature structure; Postgres — rejected for Part 1 as an unnecessary dependency, though SCALE.md flags this as the first thing to change at higher concurrency.
+- **Implication:** Migrations are plain SQL, so they're portable to Postgres later with minimal translation, but nothing here optimizes for that yet.

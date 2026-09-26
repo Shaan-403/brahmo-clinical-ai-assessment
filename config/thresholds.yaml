@@ -1,5 +1,8 @@
 # Central config — no thresholds, paths, or constants should be hardcoded in src/.
 
+database:
+  path: "db/brahmo.sqlite3"
+
 data_sources:
   cdci: { path: "data/cdci_drug_subset.csv", version_column: "source_version" }
   nlem: { path: "data/nlem_extract.csv" }
@@ -12,8 +15,24 @@ data_sources:
   corpus_dir: "corpus/"
 
 normalization:
-  fuzzy_match_min_score: 90        # rapidfuzz score below which a match is queued, never auto-resolved
-  confidence_auto_accept_threshold: 0.95
+  # Confidence assigned to a mapping that came straight from a structured source
+  # column (e.g. CDCI's own ingredient_1/2/3 fields) — no matching was performed.
+  structured_source_confidence: 1.0
+
+  # Confidence assigned to an exact match after normalizing case/whitespace/hyphens.
+  # This is the ONLY tier allowed to auto-resolve.
+  exact_match_confidence: 0.9
+
+  # rapidfuzz score (0-100) below which a fuzzy candidate isn't even worth queuing
+  # as evidence (it's noise, not a real candidate).
+  fuzzy_candidate_floor: 60
+
+  # How many fuzzy candidates to keep as evidence when queuing an item for review.
+  fuzzy_top_k: 3
+
+  # NOTE: there is deliberately no "fuzzy auto-accept" threshold. Any match that
+  # required fuzzy/approximate matching (not an exact normalized-string match) is
+  # always queued for review, regardless of score. See DESIGN.md D-002.
 
 rail:
   # every check must resolve to one of exactly these states
