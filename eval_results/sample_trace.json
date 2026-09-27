@@ -1,0 +1,353 @@
+{
+  "rx_id": "SAMPLE-TRACE-01",
+  "question": "What is the first-line antibiotic, dose basis, and duration for acute otitis media in a child?",
+  "as_of_date": "2026-09-27",
+  "generated_at": "2026-09-27T09:12:05.585045+00:00",
+  "prescription_normalization": {
+    "resolved_items": [
+      {
+        "item_no": 1,
+        "written_product": "Warf 5",
+        "product_id": 16,
+        "dose_frequency_raw": "0-0-1",
+        "doses_per_day": 1,
+        "ingredients": [
+          {
+            "ingredient_id": 9,
+            "canonical_name": "Warfarin",
+            "strength_mg": 5.0
+          }
+        ]
+      },
+      {
+        "item_no": 2,
+        "written_product": "Azee 500",
+        "product_id": 8,
+        "dose_frequency_raw": "1-0-0 x 3d",
+        "doses_per_day": 1,
+        "ingredients": [
+          {
+            "ingredient_id": 4,
+            "canonical_name": "Azithromycin",
+            "strength_mg": 500.0
+          }
+        ]
+      }
+    ],
+    "unresolved_items": []
+  },
+  "safety_rail": {
+    "duplicate_active_ingredient": [
+      {
+        "check": "duplicate_active_ingredient",
+        "rx_id": "SAMPLE-TRACE-01",
+        "state": "CHECKED_NO_HIT",
+        "severity": null,
+        "evidence": {
+          "checked_items": [
+            {
+              "item_no": 1,
+              "written_product": "Warf 5",
+              "product_id": 16
+            },
+            {
+              "item_no": 2,
+              "written_product": "Azee 500",
+              "product_id": 8
+            }
+          ]
+        },
+        "rule_version": "duplicate_active_ingredient_v1",
+        "data_versions": {
+          "cdci": {
+            "load_batch_id": 1,
+            "source_version": "2026-06-30",
+            "file_hash": "8f7cdf39bded99adff6fb58d7305b1c99ffaa3483ed8ab628e8a14d6f95afed7"
+          }
+        },
+        "as_of_date": "2026-09-27",
+        "evaluated_at": "2026-09-27T09:12:05.571235+00:00",
+        "id": 1
+      }
+    ],
+    "prohibited_restricted_fdc": [
+      {
+        "check": "prohibited_restricted_fdc",
+        "rx_id": "SAMPLE-TRACE-01",
+        "state": "PARTIAL_COVERAGE",
+        "severity": null,
+        "evidence": {
+          "checked_items": [
+            {
+              "item_no": 1,
+              "written_product": "Warf 5",
+              "external_product_id": "CD1015"
+            },
+            {
+              "item_no": 2,
+              "written_product": "Azee 500",
+              "external_product_id": "CD1007"
+            }
+          ],
+          "product_type_events_out_of_scope": "regulatory_events rows with target_type=PRODUCT are not matched by this check (see DESIGN.md D-012); this run is only conclusive for FDC/INGREDIENT-scoped actions.",
+          "note": "One or more regulatory events reference an ingredient name with no canonical match in the ingredient registry and could never be matched; coverage is not provably complete."
+        },
+        "rule_version": "prohibited_restricted_fdc_v1",
+        "data_versions": {
+          "cdci": {
+            "load_batch_id": 1,
+            "source_version": "2026-06-30",
+            "file_hash": "8f7cdf39bded99adff6fb58d7305b1c99ffaa3483ed8ab628e8a14d6f95afed7"
+          },
+          "regulatory_events": {
+            "load_batch_id": 5,
+            "source_version": null,
+            "file_hash": "a57b5a9dd4e93714d184b1bc444f03b738bb6aa2afe0fc27200be8fd73a818f5"
+          }
+        },
+        "as_of_date": "2026-09-27",
+        "evaluated_at": "2026-09-27T09:12:05.575174+00:00",
+        "id": 2
+      }
+    ],
+    "severe_interaction": [
+      {
+        "check": "severe_interaction",
+        "rx_id": "SAMPLE-TRACE-01",
+        "state": "HIT",
+        "severity": "SEVERE",
+        "evidence": {
+          "ingredient_a": "Warfarin",
+          "ingredient_b": "Azithromycin",
+          "note": "INR elevation; bleeding",
+          "source_tag": "public-high-priority-2026",
+          "contributing_items_a": [
+            {
+              "item_no": 1,
+              "written_product": "Warf 5",
+              "canonical_name": "Warfarin"
+            }
+          ],
+          "contributing_items_b": [
+            {
+              "item_no": 2,
+              "written_product": "Azee 500",
+              "canonical_name": "Azithromycin"
+            }
+          ]
+        },
+        "rule_version": "severe_interaction_v1",
+        "data_versions": {
+          "cdci": {
+            "load_batch_id": 1,
+            "source_version": "2026-06-30",
+            "file_hash": "8f7cdf39bded99adff6fb58d7305b1c99ffaa3483ed8ab628e8a14d6f95afed7"
+          },
+          "severe_interactions": {
+            "load_batch_id": 4,
+            "source_version": null,
+            "file_hash": "a68f50ebe14b902e185d3f94122ff684d0fbf790c8a9a6be73298511ffc836d9"
+          }
+        },
+        "as_of_date": "2026-09-27",
+        "evaluated_at": "2026-09-27T09:12:05.577602+00:00",
+        "id": 3
+      }
+    ],
+    "cumulative_daily_exposure": [
+      {
+        "check": "cumulative_daily_exposure",
+        "rx_id": "SAMPLE-TRACE-01",
+        "state": "CHECKED_NO_HIT",
+        "severity": null,
+        "evidence": {
+          "checked_items": [
+            {
+              "item_no": 1,
+              "written_product": "Warf 5",
+              "product_id": 16
+            },
+            {
+              "item_no": 2,
+              "written_product": "Azee 500",
+              "product_id": 8
+            }
+          ],
+          "shared_ingredient_exposure": [],
+          "note": "This check reports cumulative per-ingredient daily exposure for ingredients shared across 2+ resolved items, as evidence only. No maximum-safe-daily-dose threshold is applied or invented (no such threshold exists in the provided data pack; see DESIGN.md D-011/D-019) -- this check cannot and does not return HIT under any circumstance. Its state reflects only whether this coverage is complete or partial."
+        },
+        "rule_version": "cumulative_daily_exposure_v1",
+        "data_versions": {
+          "cdci": {
+            "load_batch_id": 1,
+            "source_version": "2026-06-30",
+            "file_hash": "8f7cdf39bded99adff6fb58d7305b1c99ffaa3483ed8ab628e8a14d6f95afed7"
+          }
+        },
+        "as_of_date": "2026-09-27",
+        "evaluated_at": "2026-09-27T09:12:05.580063+00:00",
+        "id": 4
+      }
+    ]
+  },
+  "safety_rail_note": "All four checks required by the brief are present above, each under the mandated 8-state contract (config/thresholds.yaml rail.states): (a) duplicate_active_ingredient, (b) prohibited_restricted_fdc, (c) severe_interaction, (d) cumulative_daily_exposure. (d) is a distinct check from (a) -- see DESIGN.md D-011 (why no threshold is invented) and D-019 (why (d) is also reported independently, and why it can never itself return HIT).",
+  "module_b_answer": {
+    "question": "What is the first-line antibiotic, dose basis, and duration for acute otitis media in a child?",
+    "retrieval_method": "hybrid(fts5_bm25 + offline_tfidf_v1)",
+    "filters_applied": {
+      "source_type_filter": null,
+      "include_superseded": false
+    },
+    "state": "ANSWERED",
+    "answer": {
+      "national_stw": {
+        "source_type": "national_stw",
+        "label": "national workflow",
+        "statements": [
+          {
+            "text": "\u2022 Amoxicillin 40 mg/kg/day in three divided doses for 5 days\n\u2022 Severe or <6 months: Amoxicillin\u2013Clavulanate 40 mg/kg/day (amoxicillin component)\n\u2022 Pain: Paracetamol 15 mg/kg per dose every 6 h as needed",
+            "citation": {
+              "doc_code": "STW-PED-01",
+              "title": "Acute Otitis Media \u2014 Child OPD",
+              "version": "2024.1",
+              "effective_date": "2024-05-01",
+              "source_type": "national_stw",
+              "org": null,
+              "section_heading": "FIRST-LINE MANAGEMENT",
+              "is_current": true
+            },
+            "score": 0.4481
+          },
+          {
+            "text": "\u2022 Mastoid tenderness, facial palsy, failure after 48\u201372 h of antibiotics",
+            "citation": {
+              "doc_code": "STW-PED-01",
+              "title": "Acute Otitis Media \u2014 Child OPD",
+              "version": "2024.1",
+              "effective_date": "2024-05-01",
+              "source_type": "national_stw",
+              "org": null,
+              "section_heading": "REFER",
+              "is_current": true
+            },
+            "score": 0.4394
+          },
+          {
+            "text": "\u2022 Ear pain, fever, red bulging tympanic membrane on otoscopy",
+            "citation": {
+              "doc_code": "STW-PED-01",
+              "title": "Acute Otitis Media \u2014 Child OPD",
+              "version": "2024.1",
+              "effective_date": "2024-05-01",
+              "source_type": "national_stw",
+              "org": null,
+              "section_heading": "ASSESS",
+              "is_current": true
+            },
+            "score": 0.3451
+          }
+        ]
+      }
+    },
+    "candidates_considered": [
+      {
+        "chunk_id": 38,
+        "doc_code": "STW-PED-01",
+        "source_type": "national_stw",
+        "combined_score": 0.4481
+      },
+      {
+        "chunk_id": 39,
+        "doc_code": "STW-PED-01",
+        "source_type": "national_stw",
+        "combined_score": 0.4394
+      },
+      {
+        "chunk_id": 37,
+        "doc_code": "STW-PED-01",
+        "source_type": "national_stw",
+        "combined_score": 0.3451
+      },
+      {
+        "chunk_id": 44,
+        "doc_code": "STW-PED-03",
+        "source_type": "national_stw",
+        "combined_score": 0.2794
+      },
+      {
+        "chunk_id": 41,
+        "doc_code": "STW-PED-02",
+        "source_type": "national_stw",
+        "combined_score": 0.259
+      },
+      {
+        "chunk_id": 45,
+        "doc_code": "STW-PED-03",
+        "source_type": "national_stw",
+        "combined_score": 0.2496
+      },
+      {
+        "chunk_id": 3,
+        "doc_code": "STW-GP-01",
+        "source_type": "national_stw",
+        "combined_score": 0.1439
+      },
+      {
+        "chunk_id": 32,
+        "doc_code": "STW-ORT-01",
+        "source_type": "national_stw",
+        "combined_score": 0.1421
+      }
+    ]
+  },
+  "versions": {
+    "dataset_versions": {
+      "cdci": {
+        "load_batch_id": 1,
+        "source_version": "2026-06-30",
+        "file_hash": "8f7cdf39bded99adff6fb58d7305b1c99ffaa3483ed8ab628e8a14d6f95afed7"
+      },
+      "nlem": {
+        "load_batch_id": 2,
+        "source_version": "NLEM 2022",
+        "file_hash": "e212cce8d4a5eb44d8825856fe4e869e89c09e24669a975596311805957328c8"
+      },
+      "jan_aushadhi": {
+        "load_batch_id": 3,
+        "source_version": "PMBJP-2026-05",
+        "file_hash": "1bb7228d8b6f377bfaab4d46402f93f035d8adc4391087670e00d5943a0e4506"
+      },
+      "regulatory_events": {
+        "load_batch_id": 5,
+        "source_version": null,
+        "file_hash": "a57b5a9dd4e93714d184b1bc444f03b738bb6aa2afe0fc27200be8fd73a818f5"
+      },
+      "severe_interactions": {
+        "load_batch_id": 4,
+        "source_version": null,
+        "file_hash": "a68f50ebe14b902e185d3f94122ff684d0fbf790c8a9a6be73298511ffc836d9"
+      },
+      "pharmacy_stock": {
+        "load_batch_id": 6,
+        "source_version": null,
+        "file_hash": "fcb9f6175e5b87d6b2da3d3e8fd9464d5b4285bca7399ea40cd4e1172a50162f"
+      },
+      "stw_corpus": {
+        "load_batch_id": 7,
+        "source_version": null,
+        "file_hash": "339bcee1adbccbe8ffcafe804adcff4d28f57fc3b1953f5202c46dee01d0631e"
+      }
+    },
+    "safety_rail_rule_versions": {
+      "duplicate_active_ingredient": "duplicate_active_ingredient_v1",
+      "prohibited_restricted_fdc": "prohibited_restricted_fdc_v1",
+      "severe_interaction": "severe_interaction_v1",
+      "cumulative_daily_exposure": "cumulative_daily_exposure_v1"
+    },
+    "module_b_retrieval_method": "hybrid(fts5_bm25 + offline_tfidf_v1)",
+    "prompt_model_versions": {
+      "llm_used": false,
+      "note": "No LLM or prompt is invoked anywhere in this trace. The Safety Rail is pure deterministic lookup logic (binding law -- no LLM anywhere in the check path). Module B's answering step is retrieval-and-quote only, never generation (DESIGN.md D-018). There is no prompt or model version to report because none runs."
+    }
+  }
+}

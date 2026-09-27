@@ -22,11 +22,20 @@ outranks an unrelated coverage gap), with the coverage gap noted alongside it.
 An item whose dose_frequency doesn't parse (e.g. "SOS") contributes an
 unknown, not a zero, to the cumulative total -- see
 src/module_a/rail/dose_frequency.py.
+
+The same per-ingredient cumulative-total computation is also reported
+independently, as its own coverage-only, never-HIT-producing check (d) --
+see src/module_a/rail/cumulative_exposure.py and DESIGN.md D-019. That
+check exists so Module C's trace can show all four A.6-named checks
+explicitly; it does not change anything about this check's own HIT logic
+or D-011's original reasoning (no threshold invented, the total here is
+this HIT's evidence, not its trigger).
 """
 from __future__ import annotations
 import sqlite3
 
 from src.module_a.rail.dose_frequency import parse_doses_per_day
+from src.module_a.rail.ingredient_totals import compute_ingredient_totals
 from src.module_a.rail.prescription_resolver import resolve_prescription_item
 from src.module_a.rail.provenance import current_source_versions
 from src.module_a.rail.result import build_result
@@ -77,21 +86,7 @@ def check_duplicate_ingredient(conn: sqlite3.Connection, rx_id: str, item_rows: 
             "unresolved_items": unresolved,
         })]
 
-    by_ingredient: dict[int, dict] = {}
-    for item in resolved:
-        for ing in item["ingredients"]:
-            bucket = by_ingredient.setdefault(ing["ingredient_id"], {"canonical_name": ing["canonical_name"], "contributions": {}})
-            # keyed by product_id so the same product's own FDC listing an ingredient once
-            # never counts as "two products sharing it"
-            if item["product_id"] not in bucket["contributions"]:
-                daily_mg = (ing["strength_mg"] * item["doses_per_day"]
-                            if ing["strength_mg"] is not None and item["doses_per_day"] is not None else None)
-                bucket["contributions"][item["product_id"]] = {
-                    "item_no": item["item_no"], "written_product": item["written_product"],
-                    "product_id": item["product_id"], "strength_mg": ing["strength_mg"],
-                    "dose_frequency_raw": item["dose_frequency_raw"], "doses_per_day": item["doses_per_day"],
-                    "daily_mg": daily_mg,
-                }
+    by_ingredient = compute_ingredient_totals(resolved)
 
     findings = []
     for ingredient_id, bucket in by_ingredient.items():

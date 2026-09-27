@@ -1,4 +1,4 @@
-"""run_safety_rail: ties the three checks together, persists every result
+"""run_safety_rail: ties the four checks together, persists every result
 (append-only, replayable -- binding law), and deliberately returns NO
 combined overall_state, per the finalized engineering decision."""
 import json
@@ -9,10 +9,11 @@ from src.module_a.rail.prescription_resolver import load_seed_prescriptions
 TODAY = "2026-09-27"
 
 
-def test_returns_exactly_the_three_checks_and_nothing_else(loaded_conn):
+def test_returns_exactly_the_four_checks_and_nothing_else(loaded_conn):
     rows = load_seed_prescriptions()["RX01"]
     result = run_safety_rail(loaded_conn, "RX01", rows, TODAY)
-    assert set(result.keys()) == {"duplicate_active_ingredient", "prohibited_restricted_fdc", "severe_interaction"}
+    assert set(result.keys()) == {"duplicate_active_ingredient", "prohibited_restricted_fdc",
+                                   "severe_interaction", "cumulative_daily_exposure"}
     assert "overall_state" not in result
     for check_results in result.values():
         assert isinstance(check_results, list) and len(check_results) >= 1
@@ -64,4 +65,5 @@ def test_runs_all_ten_seed_prescriptions(loaded_conn):
     result = run_safety_rail_for_all_seed_prescriptions(loaded_conn, as_of_date=TODAY)
     assert len(result) == 10
     for rx_id, checks in result.items():
-        assert set(checks.keys()) == {"duplicate_active_ingredient", "prohibited_restricted_fdc", "severe_interaction"}
+        assert set(checks.keys()) == {"duplicate_active_ingredient", "prohibited_restricted_fdc",
+                                       "severe_interaction", "cumulative_daily_exposure"}

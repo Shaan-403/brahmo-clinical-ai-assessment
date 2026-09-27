@@ -14,17 +14,21 @@ See `DESIGN.md` for the system restatement, riskiest assumptions, and the full d
 ```bash
 git clone <this-repo>
 cd brahmo-clinical-ai
+sudo apt-get install poppler-utils     # provides `pdftotext`; required by Module B's STW-corpus loader (macOS: brew install poppler)
 python3 -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.lock.txt   # pinned, reproducible (use requirements.txt for loose ranges)
-cp .env.example .env            # fill in any required keys (e.g. LLM API key for AI-assisted mapping/answering)
-alembic upgrade head            # run schema migrations
-python -m src.module_a.ingest.run_all      # load the data pack
+python -m src.module_a.ingest.run_all      # migrate + load the drug-master data pack (Module A)
+python -m src.module_b.ingest.run_all      # migrate + load the STW corpus + local protocol, build chunk embeddings (Module B)
 pytest                                     # run tests
 python -m src.module_c.trace --help        # end-to-end trace
 ```
 
-All dependencies are pure-Python/ONNX (no `torch`), so this installs in well under a minute on a normal connection. `fastembed` (ONNX-based) is used for local embeddings instead of `sentence-transformers`/`torch` — same hybrid-retrieval capability, far lighter — see `DESIGN.md` D-00x for the rationale.
+All Python dependencies are pure-Python/ONNX (no `torch`), so this installs in well under a minute on a normal connection. `fastembed` (ONNX-based) is used for local embeddings instead of `sentence-transformers`/`torch` — same hybrid-retrieval capability, far lighter — see `DESIGN.md` D-016 for the rationale, including the environment-specific fallback: if `fastembed`'s model download is blocked (e.g. by an egress policy on the model hub), `python -m src.module_b.ingest.run_all` automatically and visibly falls back to a deterministic offline TF-IDF backend and reports which one it used — no separate setup step is needed either way.
+
+The one non-Python system dependency is `pdftotext` (from `poppler-utils`), used only by Module B's STW-corpus loader to extract text from the provided PDFs. `python -m src.module_b.ingest.run_all` fails fast with an actionable error if it isn't on `PATH`.
+
+Both `run_all` entry points run their own migrations, so there's no separate `alembic upgrade head` (or equivalent) step to run first.
 
 ## Repository layout
 
@@ -36,11 +40,11 @@ corpus/           provided STW one-pagers (PDF) for Module B
 src/module_a/     drug master, normalization, regulatory event engine, safety rail, review queue
 src/module_b/     chunking, hybrid retrieval, grounded answering, mini-eval harness
 src/module_c/     single end-to-end trace script/endpoint
-prompts/          the actual prompt library used, organized and replayable
+prompts/          intended for the prompt library -- currently empty, see gaps_register.md
 tests/            unit + integration tests
 eval_results/     mini-eval output, seeded rail outputs (checked in)
 docs/             Part 2 plan
 ```
 
 ## Status
-Scaffold only — see `gaps_register.md` for what's implemented vs. pending.
+Modules A, B and C are implemented and tested (112 tests passing; see `eval_results/` for the checked-in mini-eval and seeded-rail outputs). Part 2 (`docs/PART2_PLAN.md`) is complete, covering all 9 required sections. See `gaps_register.md` for known cuts and data anomalies.

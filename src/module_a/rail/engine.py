@@ -1,18 +1,20 @@
 """A.6 -- the deterministic Safety Rail. Pure lookup logic, no LLM anywhere
 in the check path (binding requirement).
 
-run_safety_rail() runs the three independent checks for one prescription and
+run_safety_rail() runs the four independent checks (a-d, see cumulative_exposure.py
+for why (d) is a separate check from (a) despite D-011) for one prescription and
 persists every result to rail_check_results (append-only, never updated --
 binding law: everything versioned, everything replayable). There is
 DELIBERATELY no combined overall_state: each check keeps its own state, per
 the finalized engineering decision, so a caller (or Part 2's presentation
-layer) must look at all three rather than trust a single collapsed verdict.
+layer) must look at all four rather than trust a single collapsed verdict.
 """
 from __future__ import annotations
 import json
 import sqlite3
 from datetime import date
 
+from src.module_a.rail.cumulative_exposure import check_cumulative_exposure
 from src.module_a.rail.duplicate_ingredient import check_duplicate_ingredient
 from src.module_a.rail.prohibited_fdc import check_prohibited_fdc
 from src.module_a.rail.severe_interaction import check_severe_interaction
@@ -22,6 +24,13 @@ CHECKS = {
     "duplicate_active_ingredient": check_duplicate_ingredient,
     "prohibited_restricted_fdc": check_prohibited_fdc,
     "severe_interaction": check_severe_interaction,
+    # Check (d): cumulative same-ingredient exposure, reported as its own
+    # coverage-only check that never returns HIT (see cumulative_exposure.py
+    # module docstring, DESIGN.md D-011/D-019). Distinct from (a): (a) still
+    # separately carries the same cumulative total as ITS OWN HIT evidence
+    # per D-011 -- this is that same computation surfaced independently so
+    # all four A.6-named checks are explicit in every run's output.
+    "cumulative_daily_exposure": check_cumulative_exposure,
 }
 
 

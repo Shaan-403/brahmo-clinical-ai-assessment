@@ -1,18 +1,18 @@
 rx_id,item_no,written_product,strength_as_written,dose_frequency,clinical_note,candidate_rail_output_state,candidate_evidence_note
-RX01,1,Dolo 650,650 mg,1-0-1 x 5d,fever,,
-RX01,2,Sinarest Tablet,,1-0-1 x 5d,cold,,
-RX02,1,NimuPar-P,,1-0-1 x 3d,pain,,
-RX03,1,Warf 5,5 mg,0-0-1,"AF, ongoing",,
-RX03,2,Azee 500,500 mg,1-0-0 x 3d,RTI,,
-RX04,1,Telma,,1-0-0,HTN,,
-RX05,1,Glycomet 500,500 mg,1-0-1,T2DM,,
-RX05,2,Atorva 10,10 mg,0-0-1,lipids,,
-RX06,1,Augmentin 625 Duo,,1-0-1 x 5d,sinusitis,,
-RX06,2,Okacet 10,10 mg,0-0-1 x 5d,,,
-RX07,1,Calpol 650,650 mg,1-1-1 x 3d,fever,,
-RX07,2,Crocin 650,650 mg,SOS,headache,,
-RX08,1,Zqtrixon Forte,,1-0-1,(as written),,
-RX09,1,Telma-H 40,,1-0-0,HTN,,
-RX09,2,Telma 40,40 mg,0-0-1,HTN (evening),,
-RX10,1,Pan 40,40 mg,1-0-0 x 14d,GERD,,
-RX10,2,Thyronorm 50,50 mcg,1-0-0,hypothyroid,,
+RX01,1,Dolo 650,650 mg,1-0-1 x 5d,fever,HIT,duplicate_active_ingredient: paracetamol also present in item 2 (Sinarest)
+RX01,2,Sinarest Tablet,,1-0-1 x 5d,cold,HIT,Sinarest is a paracetamol-containing combination -> duplicate_active_ingredient HIT with item 1
+RX02,1,NimuPar-P,,1-0-1 x 3d,pain,HIT,NimuPar-P is a nimesulide+paracetamol FDC; nimesulide combinations are restricted -> prohibited_restricted_fdc HIT
+RX03,1,Warf 5,5 mg,0-0-1,"AF, ongoing",HIT,Warfarin + azithromycin (item 2) is a known severe interaction (bleeding risk)
+RX03,2,Azee 500,500 mg,1-0-0 x 3d,RTI,HIT,Azithromycin potentiates warfarin (item 1) -> severe_interaction HIT
+RX04,1,Telma,,1-0-0,HTN,UNVERIFIED_INPUT,"""Telma"" has no strength and does not exactly match any single catalog brand -> NO_MATCH, must not render as safe"
+RX05,1,Glycomet 500,500 mg,1-0-1,T2DM,CHECKED_NO_HIT,"Metformin, no overlap/interaction with item 2 in this dataset"
+RX05,2,Atorva 10,10 mg,0-0-1,lipids,CHECKED_NO_HIT,"Atorvastatin, no overlap/interaction with item 1 in this dataset"
+RX06,1,Augmentin 625 Duo,,1-0-1 x 5d,sinusitis,CHECKED_NO_HIT,"Augmentin 625 Duo (amoxicillin+clavulanate FDC), no overlap/interaction with item 2"
+RX06,2,Okacet 10,10 mg,0-0-1 x 5d,,CHECKED_NO_HIT,"Cetirizine, no overlap/interaction with item 1"
+RX07,1,Calpol 650,650 mg,1-1-1 x 3d,fever,HIT,"Paracetamol, fully parseable 1-1-1x3d frequency; duplicate_active_ingredient HIT with item 2 (also paracetamol)"
+RX07,2,Crocin 650,650 mg,SOS,headache,PARTIAL_COVERAGE,"Paracetamol, SOS frequency is unparseable -> cumulative_daily_exposure can only be PARTIAL_COVERAGE, never a silent full total"
+RX08,1,Zqtrixon Forte,,1-0-1,(as written),UNVERIFIED_INPUT,"""Zqtrixon Forte"" does not match any catalog brand -> NO_MATCH, must not render as safe"
+RX09,1,Telma-H 40,,1-0-0,HTN,HIT,Telma-H 40 contains telmisartan -> duplicate_active_ingredient HIT with item 2 (also telmisartan)
+RX09,2,Telma 40,40 mg,0-0-1,HTN (evening),CHECKED_NO_HIT,"Telma 40 (telmisartan), both items fully parseable once-daily doses -> cumulative_daily_exposure CHECKED_NO_HIT with complete coverage (distinct from item 1's clinical HIT above)"
+RX10,1,Pan 40,40 mg,1-0-0 x 14d,GERD,CHECKED_NO_HIT,"Pantoprazole, no overlap/interaction with item 2"
+RX10,2,Thyronorm 50,50 mcg,1-0-0,hypothyroid,CHECKED_NO_HIT,"Levothyroxine, no overlap/interaction with item 1"

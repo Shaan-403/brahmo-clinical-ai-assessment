@@ -51,3 +51,23 @@ retrieval:
   hybrid_weight_lexical: 0.5
   hybrid_weight_semantic: 0.5
   top_k: 8
+
+  # Below this combined hybrid score, the best match is not trusted enough to
+  # answer from -- the system abstains rather than stretch a weak match into
+  # an answer. Calibrated empirically against this corpus after switching to
+  # IDF-weighted lexical overlap (D-017): the highest score any off-corpus
+  # sample question (migraine/TB, zero coverage in this corpus) reaches is
+  # 0.2355 -- a boilerplate-heading false positive, not a real match -- while
+  # the lowest top-1 score among the genuinely-covered sample questions is
+  # 0.289. 0.26 sits in that gap with margin on both sides. Re-check this
+  # constant (via tests/module_b or a corpus/query-set change) rather than
+  # assuming it still holds if either changes.
+  min_combined_score_to_answer: 0.26
+
+  # A "supporting" citation (in addition to the single best chunk) must
+  # score within this fraction of the best chunk's score to be included --
+  # keeps an answer to the genuinely relevant sections of a document instead
+  # of padding it with everything above the abstain floor.
+  supporting_citation_score_ratio: 0.6
+
+  fastembed_model: "BAAI/bge-small-en-v1.5"
