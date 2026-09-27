@@ -37,7 +37,7 @@ BRAHMO is a doctor-facing clinical AI for Indian outpatient practice that is pat
 - **Implication:** New sources that mention ingredients by name (Module B's clinical text, eventually) can resolve against the same alias table and inherit the same "exact vs. queued" discipline.
 
 ### D-005 — SQLite for Part 1, with numbered raw-SQL migrations rather than an ORM/Alembic layer
-- **Decision:** Schema ships as 10 numbered, hand-written `.sql` migration files (`db/migrations/0001_...` through `0010_...`), applied by a ~30-line runner that tracks applied filenames in a `schema_migrations` table.
+- **Decision:** Schema ships as numbered, hand-written `.sql` migration files (`db/migrations/0001_...` through `0021_...` as of the current build -- Module A's original 10, plus 11 more added for Module B's STW/retrieval schema and Module C's rag_answers table), applied by a ~30-line runner that tracks applied filenames in a `schema_migrations` table.
 - **Why:** At this data volume (2,000 products, ~800 pharmacy rows) a full ORM/Alembic setup is overhead that makes the schema *harder* to review, not easier — a reviewer can read every migration file top to bottom in a few minutes. SQLite needs zero setup for the "<1 hour fresh-machine reproduction" gate.
 - **Rejected alternative(s):** SQLAlchemy models + Alembic autogeneration — rejected for this phase as premature structure; Postgres — rejected for Part 1 as an unnecessary dependency, though SCALE.md flags this as the first thing to change at higher concurrency.
 - **Implication:** Migrations are plain SQL, so they're portable to Postgres later with minimal translation, but nothing here optimizes for that yet.

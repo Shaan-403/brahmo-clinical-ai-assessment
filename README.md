@@ -40,11 +40,11 @@ corpus/           provided STW one-pagers (PDF) for Module B
 src/module_a/     drug master, normalization, regulatory event engine, safety rail, review queue
 src/module_b/     chunking, hybrid retrieval, grounded answering, mini-eval harness
 src/module_c/     single end-to-end trace script/endpoint
-prompts/          intended for the prompt library -- currently empty, see gaps_register.md
+prompts/          actual prompt library used during development, grouped by phase -- see prompts/00_README.md for scope and the one disclosed gap (early prompts lost to a context-compaction event)
 tests/            unit + integration tests
 eval_results/     mini-eval output, seeded rail outputs (checked in)
 docs/             Part 2 plan
 ```
 
 ## Status
-Modules A, B and C are implemented and tested (112 tests passing; see `eval_results/` for the checked-in mini-eval and seeded-rail outputs). Part 2 (`docs/PART2_PLAN.md`) is complete, covering all 9 required sections. See `gaps_register.md` for known cuts and data anomalies.
+Modules A, B and C are implemented and tested: **112/112 tests pass in a clean Python 3.10 environment** with `pdftotext` on `PATH` (see "Fresh-machine setup" above and `CLAUDE.md`'s Python 3.10+ target) -- this is the configuration the suite was verified against. Running on a different active Python version, or without `pdftotext` installed, will not reproduce 112/112: missing `pdftotext` alone produces 21 STW-ingestion test errors (a missing system dependency, not a code defect), and an incompatible Python version can fail dependency installation entirely before any test runs. See `eval_results/` for the checked-in mini-eval and seeded-rail outputs. Part 2 (`docs/PART2_PLAN.md`) is complete, covering all 9 required sections. See `gaps_register.md` for known cuts and data anomalies.
